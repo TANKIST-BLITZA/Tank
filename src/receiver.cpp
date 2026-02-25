@@ -4,13 +4,20 @@
 
 #define SERVO 3
 #define BTN_LEFT 4
-#define BTN_RIGHT 5
+#define BTN_RIGHT A0
+
+#define LMLD 5
+#define LMRD 6
+#define RMLD 9
+#define RMRD 10
+
+const bool isMotorsOn = true;
 
 byte address[][6] = {"1Node", "2Node"};
 byte channel = 127;
 
 Servo servo;
-RF24 rf(2, 6);
+RF24 rf(2, A1);
 
 byte pipeNo;
 
@@ -50,20 +57,57 @@ unsigned long last = millis();
 
 void loop() {
   if (millis() - last >= 3) {
-    if (digitalRead(BTN_LEFT) && digitalRead(BTN_RIGHT)) {
-      posX = expRunningAverage(errorX);
-      posY = expRunningAverage(errorY);
-      
-      posX = constrain(posX, -190, 190);
-      posY = constrain(posY, -190, 190);
-      
-      posX = map(posX, -190, 190, 0, 180);
-      posY = map(posY, -190, 190, 0, 180);
-      
-      servo.write(posY);
-    }
-    else {
-      servo.write(85);
+        posX = expRunningAverage(errorX);
+        posY = expRunningAverage(errorY);
+
+        if (isMotorsOn){
+            static int dirX;
+            static int dirY;
+            
+            if (posX >= -20 && posX <= 20) {
+                dirX = 0;
+                analogWrite(LMLD, 0);
+                analogWrite(LMRD, 0);
+            }
+            if (posX < -20) {
+                dirX = map(posX, -20, -511, 0, 255);
+                analogWrite(LMLD, dirX);
+                digitalWrite(LMRD, 0);
+            }
+            if (posX > 20) {
+                dirX = map(posX, 20, 511, 0, 255);
+                analogWrite(LMRD, dirX);
+                digitalWrite(LMLD, 0);
+            }
+            if (posY >= -20 && posY <= 20) {
+                dirY = 0;
+                analogWrite(RMLD, 0);
+                analogWrite(RMRD, 0);
+            }
+            if (posY < -20) {
+                dirY = map(posY, -20, -511, 0, 255);
+                analogWrite(RMLD, dirY);
+                digitalWrite(RMRD, 0);
+            }
+            if (posY > 20) {
+                dirY = map(posY, 20, 511, 0, 255);
+                analogWrite(RMRD, dirY);
+                digitalWrite(RMLD, 0);
+            }
+        }
+        else {
+            posX = constrain(posX, -190, 190);
+            posY = constrain(posY, -190, 190);
+    
+            posX = map(posX, -190, 190, 0, 180);
+            posY = map(posY, -190, 190, 0, 180);
+
+            if (digitalRead(BTN_LEFT) && digitalRead(BTN_RIGHT)) {  
+            servo.write(posY);
+        }
+        else {
+            servo.write(85);
+        }
     }
   }
   

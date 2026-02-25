@@ -49,4 +49,5 @@ void loop() {
     out_data[0] = moveX;
     out_data[1] = moveY;
     rf.write(&out_data, sizeof(out_data));
+    Serial.println("Pos X: " + (String)out_data[0] + ", Pos Y: " + (String)out_data[1]);
 }
